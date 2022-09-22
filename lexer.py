@@ -375,8 +375,9 @@ class Lexer(object):
             return longest
         return None
 
-    def read_split(self) -> str:
+    def read_split(self, expect_data=None) -> str:
         """Consume and return a raw (stripped) read until next whitespace.
+        Raise error if only whitespace is found and data was expected.
         >>> l = Lexer(" a  b ce f ")
         >>> l.read_split(), l.n_consumed # Skips over whitespace before read.
         ('a', 2)
@@ -390,6 +391,9 @@ class Lexer(object):
         ('', 11)
         >>> l.read_split(), l.n_consumed # Nothing left.
         ('', 11)
+        >>> l.read_split("another letter")
+        Traceback (most recent call last):
+        lext.exceptions.LexError: Missing expected data: 'another letter'.
         """
         s = self.input.split(None, 1)
         if len(s) == 2:
@@ -400,6 +404,8 @@ class Lexer(object):
             self.lstrip()
             read = ""
         assert self.find(read)
+        if expect_data and not read:
+            self.error(f"Missing expected data: {repr(expect_data)}.")
         return read
 
     def read_python_string(self) -> str or None:
