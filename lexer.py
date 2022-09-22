@@ -87,6 +87,14 @@ class Lexer(object):
         self.input = input
         self.n_consumed = 0
 
+    def __repr__(self):
+        """Display next few input characters.
+        """
+        t = type(self).__name__
+        pref = repr(self.input[0:60])
+        n = self.n_consumed
+        return f"{t}({n}): {pref}"
+
     @property
     def consumed(self):
         """Check for termination."""

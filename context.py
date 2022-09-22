@@ -72,6 +72,14 @@ class ContextLexer(object):
         # when we're catching up with the new one.
         self._late = self._lexer.copy()
 
+    def __repr__(self):
+        """Display next few input characters.
+        """
+        t = type(self._lexer).__name__
+        pref = repr(self._lexer.input[0:60])
+        pos = self.context.position
+        return f"{t}({pos}): {pref}"
+
     def copy(self):
         """Mirror inner base Lexer.copy, but with whole context associated."""
         c = ContextLexer(self._lexer.input, self._base_context)
