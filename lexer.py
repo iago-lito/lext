@@ -418,6 +418,35 @@ class Lexer(object):
             return string
         return None
 
+    def read_string_or_split(self, expect_data=None) -> (str, bool):
+        r"""Either read a raw stripped read until next whitespace
+        or a python string, depending on what's coming next.
+        Also return True in case the read was raw.
+
+        Raise in case no data is found although it's expected.
+        (empty python string is considered data)
+
+        >>> l = Lexer(" a 'b' r'''pytho\n''' notstring")
+        >>> l.read_string_or_split(), l.n_consumed
+        (('a', True), 2)
+        >>> l.read_string_or_split(), l.n_consumed
+        (('b', False), 6)
+        >>> l.read_string_or_split(), l.n_consumed
+        (('pytho\n', False), 20)
+        >>> l.read_string_or_split(), l.n_consumed
+        (('notstring', True), 30)
+        >>> l.read_string_or_split(), l.n_consumed
+        (('', True), 30)
+        >>> l.read_string_or_split("anything"), l.n_consumed
+        Traceback (most recent call last):
+        lext.exceptions.LexError: Missing expected data: 'anything'.
+        """
+        if s := self.read_python_string():
+            return (s, False)
+        if not (s:= self.read_split()) and expect_data:
+            self.error(f"Missing expected data: {repr(expect_data)}.")
+        return (s, True)
+
     def read_until(
         self,
         stop=EOI,
