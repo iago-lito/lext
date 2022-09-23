@@ -31,11 +31,15 @@ class Reader(object):
 
     Hard readers can also be used as "ignorers" to handle input that is okay to ignore,
     provided they return None as a parsed object.
+
+    Readers can return a list of objects instead,
+    which will be processed in turn by the parser
+    as if they were actually yielded by successive readers.
     """
 
-    def section_match(self, lexer) -> object or None:
+    def section_match(self, lexer) -> object or [object]:
         """Check whether the input yields a start match."""
-        raise NotImplementedError("Missing method 'match' for {type(self).__name__}.")
+        raise NotImplementedError(f"Missing method 'match' for {type(self).__name__}.")
 
     # Defer basic calls to Lexer's API.
     def __getattr__(self, name):
@@ -67,7 +71,7 @@ class SplitAutomaton(object):
         """
         raise NotImplementedError(f"Missing method 'feed' for {type(self).__name__}.")
 
-    def terminate(self):
+    def terminate(self) -> object or [object]:
         """That's the signal, send to us by the main parser,
         that all lines have been fed.
         Finish constructing the object and return it.

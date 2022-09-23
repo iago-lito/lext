@@ -17,14 +17,17 @@ class Parser(object):
         # Instructions collected while parsing.
         self._collect = []
 
-    def collect(self, parsed_object):
-        """Intercept ParseEditor object to offer them our edition API
-        without passing them to the test runner.
+    def collect(self, parsed_objects):
+        """Intercept ParseEditor objects to offer them our edition API
+        without yielding them.
         """
-        if isinstance(pe := parsed_object, ParseEditor):
-            pe.execute(self)
-        else:
-            self._collect.append(parsed_object)
+        if not type(parsed_objects) is list:
+            parsed_objects = [parsed_objects]
+        for o in parsed_objects:
+            if isinstance(ed := o, ParseEditor):
+                ed.execute(self)
+            else:
+                self._collect.append(o)
 
     def find_matching_reader(self, lexer) -> [object]:
         """Consume necessary input
