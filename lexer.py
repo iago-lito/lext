@@ -88,8 +88,7 @@ class Lexer(object):
         self.n_consumed = 0
 
     def __repr__(self):
-        """Display next few input characters.
-        """
+        """Display next few input characters."""
         t = type(self).__name__
         pref = repr(self.input[0:60])
         n = self.n_consumed
@@ -232,10 +231,11 @@ class Lexer(object):
             return True
         return False
 
-    def find(self, token) -> bool or (bool, str or None):
+    def find(self, token, consume=True) -> bool or (bool, str or None):
         r"""Consume whitespace until the given token is found.
         Return False and consume nothing if it does not appear next in the input.
         Return also the match in case a regex is given as a token (None if nomatch).
+        Only perform a lookahead with no state modification if consume=False.
         >>> lex = Lexer(" a b c d ")
         >>> l = lex.copy()
         >>> l.find('a'), l.n_consumed # Skip to first such token.
@@ -275,9 +275,18 @@ class Lexer(object):
         ((False, None), 9)
         >>> l.find(rc(r'')), l.n_consumed  # .. but emptyness.
         ((True, ''), 9)
+
+        Don't consume input if undesired.
+        >>> lex.find('a', consume = False), lex.n_consumed
+        (True, 0)
+        >>> lex.find(rc(r'a'), consume = False), lex.n_consumed # Without consuming input.
+        ((True, 'a'), 0)
         """
         if token == "":
             return True
+        if not consume:
+            lookahead = self.copy()
+            return lookahead.find(token, consume=True)
         l = self.copy().lstrip()
         if token == EOI and not l.input:
             self.become(l)
@@ -307,11 +316,13 @@ class Lexer(object):
         self.input = rest
         return (True, match) if type(token) is re.Pattern else True
 
-    def find_either(self, tokens) -> str or EOI or None:
+    def find_either(self, tokens, consume=True) -> str or EOI or None:
         r"""Consume whitespace until one of the given tokens is found.
         Return the longest token if several do match.
         Return None if none appears next in the input.
-        >>> l = Lexer(" a :: b ")
+        Only perform a lookahead with no state modification if consume=False.
+        >>> lex = Lexer(" a :: b ")
+        >>> l = lex.copy()
         >>> l.find_either(['a', ':']), l.n_consumed # First wins.
         ('a', 2)
         >>> l.find_either([':', '::']), l.n_consumed # Longest wins.
@@ -330,7 +341,7 @@ class Lexer(object):
         ('', 8)
 
         What about regexes tokens?
-        >>> l, rc = Lexer(" a :: b "), re.compile
+        >>> l, rc = lex.copy(), re.compile
         >>> l.find_either([rc(r'a'), ':']), l.n_consumed # First wins
         ('a', 2)
         >>> l.find_either([rc(r':+'), ':']), l.n_consumed # Longest wins (the regex)
@@ -345,7 +356,16 @@ class Lexer(object):
         ('', 8)
         >>> l.find_either([EOI, rc(r'\s+')]), l.n_consumed
         (EOI, 8)
+
+        Don't consume input if undesired.
+        >>> lex.find_either(['a', ':'], consume = False), lex.n_consumed
+        ('a', 0)
+        >>> lex.find_either([rc(r'a'), ':'], consume = False), lex.n_consumed # Without consuming input.
+        ('a', 0)
         """
+        if not consume:
+            lookahead = self.copy()
+            return lookahead.find_either(tokens, consume=True)
         # Spawn lexers to make them all 'find' then pick best one.
         longest = None
         best_lex = None
@@ -457,7 +477,7 @@ class Lexer(object):
         """
         if s := self.read_python_string():
             return (s, False)
-        if not (s:= self.read_split()) and expect_data:
+        if not (s := self.read_split()) and expect_data:
             self.error(f"Missing expected data: {repr(expect_data)}.")
         return (s, True)
 
