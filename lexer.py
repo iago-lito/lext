@@ -261,7 +261,7 @@ class Lexer(object):
 
         Same tests with regex tokens.
         >>> l, rc = lex.copy(), re.compile
-        >>> l.find(rc(r'a')), l.n_consumed
+        >>> l.find(rc(r'\w+\b')), l.n_consumed # Use to get one word.
         ((True, 'a'), 2)
         >>> l.find(rc(r'X')), l.n_consumed
         ((False, None), 2)
@@ -488,7 +488,7 @@ class Lexer(object):
         strip=False,
         expect_data=None,
     ) -> str or None or (str, str):
-        """Return all raw input before the fixed stop pattern.
+        r"""Return all raw input before the fixed stop pattern.
         None if 'stop' cannot be found.
         Request EOI to return all remaining input.
         If requesting a regex pattern, the match value is also returned.
@@ -533,8 +533,12 @@ class Lexer(object):
 
         With regular expressions as stops.
         >>> l, rc = Lexer(" raw read <marker> another read <mark>"), re.compile
+        >>> l.read_until(rc(r'\b')), l.n_consumed
+        ((' ', ''), 1)
+        >>> l.read_until(rc(r'\w+\b')), l.n_consumed # Convoluted way to split words.
+        (('', 'raw'), 4)
         >>> l.read_until(rc(r'<.*?>')), l.n_consumed
-        ((' raw read ', '<marker>'), 18)
+        ((' read ', '<marker>'), 18)
         >>> l.read_until(rc(r'<[uvz]+>')), l.n_consumed
         (None, 18)
         >>> l.read_until(rc(r'')), l.n_consumed
