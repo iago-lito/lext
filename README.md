@@ -13,6 +13,9 @@ can modify the parser behaviour before it reaches the end of this file.
 
 There is no full-fleshed, centralized documentation yet,
 as the project is still a brutal extraction from [Clibate] internals.
+I only use it as an experimental approach to lexing for now,
+and will only pour more input into it if/when I'm eventually convinced
+that there's something new/useful within it.
 
 ### Lexing
 
